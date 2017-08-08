@@ -30,6 +30,7 @@
 #import "BRPeerManager.h"
 #import "BREventManager.h"
 #import "BRUserDefaultsSwitchCell.h"
+#import "BRAdvancedSettingsViewController.h"
 #import "breadwallet-Swift.h"
 #include <WebKit/WebKit.h>
 #include <asl.h>
@@ -277,7 +278,7 @@
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
     if (tableView == self.selectorController.tableView) return 1;
-    return 4;
+    return 5;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
@@ -289,6 +290,7 @@
         case 1: return (self.touchId) ? 3 : 2;
         case 2: return 3;
         case 3: return 1;
+        case 4: return 1;
     }
     
     return 0;
@@ -390,6 +392,10 @@ _switch_cell:
             }
 
             break;
+        case 4:
+            cell = [tableView dequeueReusableCellWithIdentifier:disclosureIdent];
+            cell.textLabel.text = NSLocalizedString(@"advanced", nil);
+            return cell;
     }
     
     [self setBackgroundForCell:cell tableView:tableView indexPath:indexPath];
@@ -565,6 +571,12 @@ _switch_cell:
     [self presentViewController:self.eaController animated:YES completion:nil];
 }
 
+- (void)showAdvancedSettings
+{
+    BRAdvancedSettingsViewController *vc = [[BRAdvancedSettingsViewController alloc] init];
+    [self.navigationController pushViewController:vc animated:true];
+}
+
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     //TODO: include an option to generate a new wallet and sweep old balance if backup may have been compromized
@@ -654,6 +666,9 @@ _deselect_switch:
             break;
         case 3:
             [self showEarlyAccess];
+            break;
+        case 4:
+            [self showAdvancedSettings];
             break;
     }
 }

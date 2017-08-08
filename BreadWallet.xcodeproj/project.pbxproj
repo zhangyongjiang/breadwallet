@@ -153,6 +153,8 @@
 		BAC7B6BE1BD9C29900165B84 /* BRPhoneWCSessionManager.m in Sources */ = {isa = PBXBuildFile; fileRef = BAC7B6BD1BD9C29900165B84 /* BRPhoneWCSessionManager.m */; };
 		BAE12BF21B2DEE7F00895CC5 /* TodayExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = BAE12BE51B2DEE7F00895CC5 /* TodayExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		BAE12C061B2DEEF700895CC5 /* BRTodayViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = BAE12C051B2DEEF700895CC5 /* BRTodayViewController.m */; };
+		CE5EFDD41F392F36001A21C1 /* BRAdvancedSettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CE5EFDD31F392F36001A21C1 /* BRAdvancedSettingsViewController.m */; };
+		CE5EFDD71F3935BF001A21C1 /* BRSendBCashViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CE5EFDD61F3935BF001A21C1 /* BRSendBCashViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -567,6 +569,10 @@
 		BAE12BEA1B2DEE7F00895CC5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BAE12C041B2DEEF700895CC5 /* BRTodayViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BRTodayViewController.h; sourceTree = "<group>"; };
 		BAE12C051B2DEEF700895CC5 /* BRTodayViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BRTodayViewController.m; sourceTree = "<group>"; };
+		CE5EFDD21F392F36001A21C1 /* BRAdvancedSettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BRAdvancedSettingsViewController.h; sourceTree = "<group>"; };
+		CE5EFDD31F392F36001A21C1 /* BRAdvancedSettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BRAdvancedSettingsViewController.m; sourceTree = "<group>"; };
+		CE5EFDD51F3935BF001A21C1 /* BRSendBCashViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BRSendBCashViewController.h; sourceTree = "<group>"; };
+		CE5EFDD61F3935BF001A21C1 /* BRSendBCashViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BRSendBCashViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -900,6 +906,10 @@
 				751B2B5B1B68911700EA87FB /* BRTxHistoryViewController.m */,
 				757C89501A2FCE420076B373 /* BRSettingsViewController.h */,
 				757C89511A2FCE420076B373 /* BRSettingsViewController.m */,
+				CE5EFDD21F392F36001A21C1 /* BRAdvancedSettingsViewController.h */,
+				CE5EFDD31F392F36001A21C1 /* BRAdvancedSettingsViewController.m */,
+				CE5EFDD51F3935BF001A21C1 /* BRSendBCashViewController.h */,
+				CE5EFDD61F3935BF001A21C1 /* BRSendBCashViewController.m */,
 				758DBD0C1980634900389E2A /* BRTxDetailViewController.h */,
 				758DBD0D1980634900389E2A /* BRTxDetailViewController.m */,
 				757BE7E4192C1FF70061CB20 /* BRWelcomeViewController.h */,
@@ -1458,6 +1468,7 @@
 				752E28DA19234C3600DB5A3C /* BRWallet.m in Sources */,
 				229279981C695C4200C98E78 /* BRHTTPServer.swift in Sources */,
 				752874FF1F393391002167CC /* BRBIP39Mnemonic.c in Sources */,
+				CE5EFDD41F392F36001A21C1 /* BRAdvancedSettingsViewController.m in Sources */,
 				22BF17471CDF831800AA41C6 /* Extensions.swift in Sources */,
 				220128D91C77B3100001CAC1 /* BRHTTPIndexMiddleware.swift in Sources */,
 				752E28DB19234C3600DB5A3C /* BRWalletManager.m in Sources */,
@@ -1486,6 +1497,7 @@
 				22F7B6DA1D14A665007CC848 /* BRActivityView.swift in Sources */,
 				22B5F7841D665A0300657B77 /* BRKVStorePlugin.swift in Sources */,
 				757BE7E3192C0E9D0061CB20 /* BRRestoreViewController.m in Sources */,
+				CE5EFDD71F3935BF001A21C1 /* BRSendBCashViewController.m in Sources */,
 				757BE7E6192C1FF70061CB20 /* BRWelcomeViewController.m in Sources */,
 				757BE7E9192D4E880061CB20 /* BRSeedViewController.m in Sources */,
 				752E28E719234DA200DB5A3C /* NSData+Bitcoin.m in Sources */,
