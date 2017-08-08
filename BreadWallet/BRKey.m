@@ -35,70 +35,71 @@
 #define WORDS_BIGENDIAN        1
 #endif
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wconversion"
-#pragma clang diagnostic ignored "-Wunused-function"
-#pragma clang diagnostic ignored "-Wconditional-uninitialized"
+//#pragma clang diagnostic push
+//#pragma clang diagnostic ignored "-Wconversion"
+//#pragma clang diagnostic ignored "-Wunused-function"
+//#pragma clang diagnostic ignored "-Wconditional-uninitialized"
 #include "secp256k1/src/basic-config.h"
-#include "secp256k1/src/secp256k1.c"
-#pragma clang diagnostic pop
+#include "secp256k1/include/secp256k1.h"
+#include "secp256k1/include/secp256k1_recovery.h"
+//#pragma clang diagnostic pop
 
 static secp256k1_context *_ctx = NULL;
 static dispatch_once_t _ctx_once = 0;
 
-// adds 256bit big endian ints a and b (mod secp256k1 order) and stores the result in a
-// returns true on success
-int BRSecp256k1ModAdd(UInt256 *a, const UInt256 *b)
-{
-    dispatch_once(&_ctx_once, ^{ _ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY); });
-    return secp256k1_ec_privkey_tweak_add(_ctx, (unsigned char *)a, (const unsigned char *)b);
-}
-
-// multiplies 256bit big endian ints a and b (mod secp256k1 order) and stores the result in a
-// returns true on success
-int BRSecp256k1ModMul(UInt256 *a, const UInt256 *b)
-{
-    dispatch_once(&_ctx_once, ^{ _ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY); });
-    return secp256k1_ec_privkey_tweak_mul(_ctx, (unsigned char *)a, (const unsigned char *)b);
-}
-
-// multiplies secp256k1 generator by 256bit big endian int i and stores the result in p
-// returns true on success
-int BRSecp256k1PointGen(BRECPoint *p, const UInt256 *i)
-{
-    secp256k1_pubkey pubkey;
-    size_t pLen = sizeof(*p);
-    
-    dispatch_once(&_ctx_once, ^{ _ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY); });
-    return (secp256k1_ec_pubkey_create(_ctx, &pubkey, (const unsigned char *)i) &&
-            secp256k1_ec_pubkey_serialize(_ctx, (unsigned char *)p, &pLen, &pubkey, SECP256K1_EC_COMPRESSED));
-}
-
-// multiplies secp256k1 generator by 256bit big endian int i and adds the result to ec-point p
-// returns true on success
-int BRSecp256k1PointAdd(BRECPoint *p, const UInt256 *i)
-{
-    secp256k1_pubkey pubkey;
-    size_t pLen = sizeof(*p);
-    
-    dispatch_once(&_ctx_once, ^{ _ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY); });
-    return (secp256k1_ec_pubkey_parse(_ctx, &pubkey, (const unsigned char *)p, sizeof(*p)) &&
-            secp256k1_ec_pubkey_tweak_add(_ctx, &pubkey, (const unsigned char *)i) &&
-            secp256k1_ec_pubkey_serialize(_ctx, (unsigned char *)p, &pLen, &pubkey, SECP256K1_EC_COMPRESSED));
-}
-
-// multiplies secp256k1 ec-point p by 256bit big endian int i and stores the result in p
-// returns true on success
-int BRSecp256k1PointMul(BRECPoint *p, const UInt256 *i)
-{
-    secp256k1_pubkey pubkey;
-    size_t pLen = sizeof(*p);
-    
-    dispatch_once(&_ctx_once, ^{ _ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY); });
-    return (secp256k1_ec_pubkey_parse(_ctx, &pubkey, (const unsigned char *)p, sizeof(*p)) &&
-            secp256k1_ec_pubkey_tweak_mul(_ctx, &pubkey, (const unsigned char *)i) &&
-            secp256k1_ec_pubkey_serialize(_ctx, (unsigned char *)p, &pLen, &pubkey, SECP256K1_EC_COMPRESSED));
-}
+//// adds 256bit big endian ints a and b (mod secp256k1 order) and stores the result in a
+//// returns true on success
+//int BRSecp256k1ModAdd(UInt256 *a, const UInt256 *b)
+//{
+//    dispatch_once(&_ctx_once, ^{ _ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY); });
+//    return secp256k1_ec_privkey_tweak_add(_ctx, (unsigned char *)a, (const unsigned char *)b);
+//}
+//
+//// multiplies 256bit big endian ints a and b (mod secp256k1 order) and stores the result in a
+//// returns true on success
+//int BRSecp256k1ModMul(UInt256 *a, const UInt256 *b)
+//{
+//    dispatch_once(&_ctx_once, ^{ _ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY); });
+//    return secp256k1_ec_privkey_tweak_mul(_ctx, (unsigned char *)a, (const unsigned char *)b);
+//}
+//
+//// multiplies secp256k1 generator by 256bit big endian int i and stores the result in p
+//// returns true on success
+//int BRSecp256k1PointGen(BRECPoint *p, const UInt256 *i)
+//{
+//    secp256k1_pubkey pubkey;
+//    size_t pLen = sizeof(*p);
+//    
+//    dispatch_once(&_ctx_once, ^{ _ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY); });
+//    return (secp256k1_ec_pubkey_create(_ctx, &pubkey, (const unsigned char *)i) &&
+//            secp256k1_ec_pubkey_serialize(_ctx, (unsigned char *)p, &pLen, &pubkey, SECP256K1_EC_COMPRESSED));
+//}
+//
+//// multiplies secp256k1 generator by 256bit big endian int i and adds the result to ec-point p
+//// returns true on success
+//int BRSecp256k1PointAdd(BRECPoint *p, const UInt256 *i)
+//{
+//    secp256k1_pubkey pubkey;
+//    size_t pLen = sizeof(*p);
+//    
+//    dispatch_once(&_ctx_once, ^{ _ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY); });
+//    return (secp256k1_ec_pubkey_parse(_ctx, &pubkey, (const unsigned char *)p, sizeof(*p)) &&
+//            secp256k1_ec_pubkey_tweak_add(_ctx, &pubkey, (const unsigned char *)i) &&
+//            secp256k1_ec_pubkey_serialize(_ctx, (unsigned char *)p, &pLen, &pubkey, SECP256K1_EC_COMPRESSED));
+//}
+//
+//// multiplies secp256k1 ec-point p by 256bit big endian int i and stores the result in p
+//// returns true on success
+//int BRSecp256k1PointMul(BRECPoint *p, const UInt256 *i)
+//{
+//    secp256k1_pubkey pubkey;
+//    size_t pLen = sizeof(*p);
+//    
+//    dispatch_once(&_ctx_once, ^{ _ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY); });
+//    return (secp256k1_ec_pubkey_parse(_ctx, &pubkey, (const unsigned char *)p, sizeof(*p)) &&
+//            secp256k1_ec_pubkey_tweak_mul(_ctx, &pubkey, (const unsigned char *)i) &&
+//            secp256k1_ec_pubkey_serialize(_ctx, (unsigned char *)p, &pLen, &pubkey, SECP256K1_EC_COMPRESSED));
+//}
 
 @interface BRKey ()
 
