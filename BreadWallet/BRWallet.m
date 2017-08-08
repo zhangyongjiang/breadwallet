@@ -36,6 +36,12 @@
 #import "NSMutableData+Bitcoin.h"
 #import "NSManagedObject+Sugar.h"
 
+#if BITCOIN_TESTNET
+#error don't know bcash testnet fork height
+#else // mainnet
+#define BCASH_FORKHEIGHT 478559
+#endif
+
 // chain position of first tx output address that appears in chain
 static NSUInteger txAddressIndex(BRTransaction *tx, NSArray *chain) {
     for (NSString *addr in tx.outputAddresses) {
@@ -923,6 +929,21 @@ masterPublicKey:(NSData *)masterPublicKey seed:(NSData *(^)(NSString *authprompt
              [NSMutableData sizeOfVarInt:2] + TX_OUTPUT_SIZE*2;
     fee = [self feeForTxSize:txSize + cpfpSize];
     return (amount > fee) ? amount - fee : 0;
+}
+
+// returns an unsigned transaction that sweeps all wallet UTXOs as of block height 478559 to addr
+// transaction must be signed using a forkId of 0x40
+- (BRTransaction * _Nullable)bCashSweepTxTo:(NSString * _Nonnull)address feePerKb:(uint64_t)feePerKb
+{
+    BRWallet *w = [[BRWallet alloc] initWithContext:nil sequence:self.sequence masterPublicKey:self.masterPublicKey
+                   seed:^NSData *(NSString *authprompt, uint64_t amount) { return nil; }];
+    
+    for (BRTransaction *tx in self.transactions) {
+        if (tx.blockHeight < BCASH_FORKHEIGHT) [w registerTransaction:tx];
+    }
+    
+    w.feePerKb = feePerKb;
+    return [w transactionFor:w.maxOutputAmount to:address withFee:YES];
 }
 
 @end

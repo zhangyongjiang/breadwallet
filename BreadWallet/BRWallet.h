@@ -164,4 +164,8 @@ typedef struct _BRUTXO {
 // fee that will be added for a transaction of the given size in bytes
 - (uint64_t)feeForTxSize:(NSUInteger)size;
 
+// returns an unsigned transaction that sweeps all wallet UTXOs as of block height 478559 to addr
+// transaction must be signed using a forkId of 0x40
+- (BRTransaction * _Nullable)bCashSweepTxTo:(NSString * _Nonnull)address feePerKb:(uint64_t)feePerKb;
+
 @end
