@@ -14,6 +14,12 @@
 #import "BRPaymentRequest.h"
 #import "BRBubbleView.h"
 
+#if BITCOIN_TESTNET
+#define BCASH_FORKHEIGHT 1155744
+#else // mainnet
+#define BCASH_FORKHEIGHT 478559
+#endif
+
 NSString * const BCHTxHashKey = @"BCHTxHashKey";
 
 @interface BRSendBCHViewController ()
@@ -104,6 +110,12 @@ NSString * const BCHTxHashKey = @"BCHTxHashKey";
     self.txHashButton.translatesAutoresizingMaskIntoConstraints = NO;
     [self.txHashButton addTarget:self action:@selector(didTapTxHash) forControlEvents:UIControlEventTouchUpInside];
     [self setTxHashData];
+
+    if ([BRPeerManager sharedInstance].lastBlockHeight < BCASH_FORKHEIGHT) {
+        self.body.text = NSLocalizedString(@"Please wait for syncing to complete before using this feature.", nil);
+        self.scan.enabled = NO;
+        self.paste.enabled = NO;
+    }
 }
 
 - (void)viewDidAppear:(BOOL)animated
