@@ -16,10 +16,10 @@ private let apiClient = BRAPIClient()
 @objc class BCHSender : NSObject {
 
     func sendBCHTransaction(walletManager: BRWalletManager, address: String, feePerKb: UInt64, callback: @escaping (String?) -> Void) {
-        let genericError = "Something went wrong";
-        guard let txData = walletManager.wallet?.bCashSweepTx(to: address, feePerKb: feePerKb)?.data else { assert(false, "No Tx Data"); return callback("Your account does not contain any BCH, or you received BCH after the fork.") }
+        let genericError = "Your account does not contain any BCH, or you received BCH after the fork.";
+        guard let txData = walletManager.wallet?.bCashSweepTx(to: address, feePerKb: feePerKb)?.data else { assert(false, "No Tx Data"); return callback(genericError) }
         guard let txCount = walletManager.wallet?.allTransactions.count else { assert(false, "Could not get txCount"); return callback(genericError) }
-        guard let mpk = walletManager.masterPublicKey?.masterPubKey else { assert(false, "Count not get mpkData"); return callback(genericError) }
+        guard let mpk = walletManager.masterPublicKey?.masterPubKey else { assert(false, "Count not get mpkData"); return callback("Couldn't prepare transaction.") }
         guard let balance = walletManager.wallet?.balance else { return callback(genericError) }
 
         guard let tx = txData.withUnsafeBytes({ (ptr: UnsafePointer<UInt8>) -> BRTxRef? in

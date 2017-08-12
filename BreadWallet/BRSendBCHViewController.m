@@ -92,12 +92,12 @@ NSString * const BCHTxHashKey = @"BCHTxHashKey";
 - (void)setInitialData
 {
     self.view.backgroundColor = [UIColor clearColor];
-    self.navigationItem.title = NSLocalizedString(@"Withdraw Bitcoin Cash", nil);
+    self.navigationItem.title = NSLocalizedString(@"Withdraw BCH", nil);
 
     self.body.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:17.0];
     self.body.numberOfLines = 0;
     self.body.lineBreakMode = NSLineBreakByWordWrapping;
-    self.body.text = NSLocalizedString(@"Use one of the options below to enter your destination address. All Bitcoin Cash in your wallet at the time of the fork will be sent.", nil);
+    self.body.text = NSLocalizedString(@"Use one of the options below to enter your destination address. All BCH in your wallet at the time of the fork will be sent.", nil);
     self.body.translatesAutoresizingMaskIntoConstraints = NO;
 
     [self.scan setImageEdgeInsets:UIEdgeInsetsMake(0, -10.0, 0.0, 10.0)];
@@ -105,7 +105,7 @@ NSString * const BCHTxHashKey = @"BCHTxHashKey";
     [self.paste addTarget:self action:@selector(didTapPaste) forControlEvents:UIControlEventTouchUpInside];
 
     self.txHashHeader.translatesAutoresizingMaskIntoConstraints = NO;
-    self.txHashHeader.text = NSLocalizedString(@"Bitcoin Cash Withraw Transaction ID", nil);
+    self.txHashHeader.text = NSLocalizedString(@"BCH Transaction ID", nil);
     [self.txHashHeader setHidden:YES];
     self.txHashButton.translatesAutoresizingMaskIntoConstraints = NO;
     [self.txHashButton addTarget:self action:@selector(didTapTxHash) forControlEvents:UIControlEventTouchUpInside];
