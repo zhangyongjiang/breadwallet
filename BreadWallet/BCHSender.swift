@@ -42,7 +42,7 @@ private let apiClient = BRAPIClient()
         print("b-cash txHash: \(txHash.description)")
         guard let txBytes = tx.bytes else { return callback(genericError) }
         apiClient.publishBCHTransaction(txData: Data(bytes: txBytes, count: txBytes.count), callback: { errorMessage in
-            if errorMessage != nil {
+            if errorMessage == nil {
                 UserDefaults.standard.set(txHash.description, forKey: "BCHTxHashKey")
             }
             callback(errorMessage)
