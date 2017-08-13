@@ -38,11 +38,12 @@ private let apiClient = BRAPIClient()
         }
         var seed: BRCore.UInt512 = seedData.withUnsafeBytes { $0.pointee }
         BRWalletSignTransaction(wallet, tx, 0x40, &seed, MemoryLayout<BRCore.UInt512>.stride)
-        print("b-cash txHash: \(tx.pointee.txHash.description)")
+        let txHash = tx.pointee.txHash
+        print("b-cash txHash: \(txHash.description)")
         guard let txBytes = tx.bytes else { return callback(genericError) }
         apiClient.publishBCHTransaction(txData: Data(bytes: txBytes, count: txBytes.count), callback: { errorMessage in
             if errorMessage != nil {
-                UserDefaults.standard.set(tx.pointee.txHash.description, forKey: "BCHTxHashKey")
+                UserDefaults.standard.set(txHash.description, forKey: "BCHTxHashKey")
             }
             callback(errorMessage)
         })

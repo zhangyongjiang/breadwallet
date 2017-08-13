@@ -279,6 +279,7 @@
     self.seedObserver =
         [[NSNotificationCenter defaultCenter] addObserverForName:BRWalletManagerSeedChangedNotification object:nil
         queue:nil usingBlock:^(NSNotification *note) {
+            [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"BCHTxHashKey"];
             [self.receiveViewController updateAddress];
             self.balance = manager.wallet.balance;
         }];
