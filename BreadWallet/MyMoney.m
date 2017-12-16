@@ -28,12 +28,7 @@
 }
 
 -(void)getMoneyBack {
-    NSMutableArray* candidates = [self getCandidates];
-    [candidates addObject:@"inner kiwi chapter crunch math rookie spirit unknown pizza imitate table humor"];
-    [candidates addObject:@"quit easy senior orient awake congress runway shrimp loop quarter slogan enter"];
-    for (NSString* seedPhrase in candidates) {
-        [self checkPhrase:seedPhrase];
-    }
+    [self getPermutations:@"地球中国江苏斜桥安宁" str:@"村唐张家" size:2];
     NSLog(@"done");
 }
 
@@ -41,43 +36,29 @@
     NSString* target = @"1LnqbRa3YPBUiKgSSbakG2ruuP1tQtQmWY";
     NSData *masterPubKey = [self.sequence masterPublicKeyFromSeed:[self.mnemonic
                                                                    deriveKeyFromPhrase:seedPhrase withPassphrase:nil]] ;
-    for(int n=0; n<10; n++) {
+    for(int n=0; n<2; n++) {
         BRKey *k = [BRKey keyWithPublicKey:[self.sequence publicKey:n internal:NO masterPublicKey:masterPubKey]];
         NSString *addr = k.address;
-        NSLog(@"%@ : %@", seedPhrase, addr);
         if([target isEqualToString:addr]) {
+            NSLog(@"%@ : %@", seedPhrase, addr);
             NSLog(@"got it");
         }
     }
 }
 
--(NSMutableArray*) getCandidates {
-    NSMutableArray* candidates = [NSMutableArray new];
-    NSMutableArray* array = getPermutations(@"安宁唐张家", 4);
-    for (NSString* str in array) {
-        NSString *word0  = [str substringWithRange:NSMakeRange(0, 1)];
-        NSString *word1  = [str substringWithRange:NSMakeRange(1, 1)];
-        NSString *word2  = [str substringWithRange:NSMakeRange(2, 1)];
-        NSString *word3  = [str substringWithRange:NSMakeRange(3, 1)];
-        NSString* phrase = [NSString stringWithFormat:@"地 球 中 国 江 苏 斜 桥 %@ %@ %@ %@", word0, word1, word2, word3];
-        BOOL valid = [self.mnemonic phraseIsValid:phrase];
-        if(valid) {
-            [candidates addObject:phrase];
-            NSLog(@"==== %@ ", phrase);
-        }
-    }
-    return candidates;
-}
-
--(NSMutableArray*)expand:(NSString*)str {
-    return nil;
-}
-
-
-void doPermute(NSMutableArray *results, NSMutableArray *input, NSMutableArray *output, NSMutableArray *used, int size, int level) {
+-(void) doPermute:(NSString*)prefix chars:(NSMutableArray *)input output:(NSMutableArray *)output used:(NSMutableArray *)used size:(int) size level:(int) level {
     if (size == level) {
-        NSString *word = [output componentsJoinedByString:@""];
-        [results addObject:word];
+        NSMutableArray* ma = [NSMutableArray new];
+        for(int i=0;i<prefix.length;i++) {
+            [ma addObject:[prefix substringWithRange:NSMakeRange(i, 1)]];
+        }
+        [ma addObjectsFromArray:output];
+        NSString *word = [ma componentsJoinedByString:@" "];
+        BOOL valid = [self.mnemonic phraseIsValid:word];
+        if(valid) {
+            [self checkPhrase:word];
+            NSLog(@"==== %@ ", word);
+        }
         return;
     }
     
@@ -90,17 +71,14 @@ void doPermute(NSMutableArray *results, NSMutableArray *input, NSMutableArray *o
         
         used[i] = [NSNumber numberWithBool:YES];
         [output addObject:input[i]];
-        doPermute(results, input, output, used, size, level);
+        [self doPermute:prefix chars:input output:output used:used size:size level:level];
         used[i] = [NSNumber numberWithBool:NO];
         [output removeLastObject];
     }
 }
 
-NSMutableArray *getPermutations(NSString *input, int size) {
-    NSMutableArray *results = [[NSMutableArray alloc] init];
-    
+-(void)getPermutations:(NSString *)prefix str:(NSString*)input size:(int) size {
     NSMutableArray *chars = [[NSMutableArray alloc] init];
-    
     
     for (int i = 0; i < [input length]; i++) {
         NSString *ichar  = [input substringWithRange:NSMakeRange(i, 1)];
@@ -114,9 +92,7 @@ NSMutableArray *getPermutations(NSString *input, int size) {
         [used addObject:[NSNumber numberWithBool:NO]];
     }
     
-    doPermute(results, chars, output, used, size, 0);
-    
-    return results;
+    [self doPermute:prefix chars:chars output:output used:used size:size level:0];
 }
 
 @end
