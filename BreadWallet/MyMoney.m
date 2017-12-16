@@ -36,26 +36,31 @@
     NSString* target = @"1LnqbRa3YPBUiKgSSbakG2ruuP1tQtQmWY";
     NSData *masterPubKey = [self.sequence masterPublicKeyFromSeed:[self.mnemonic
                                                                    deriveKeyFromPhrase:seedPhrase withPassphrase:nil]] ;
-    for(int n=0; n<2; n++) {
-        BRKey *k = [BRKey keyWithPublicKey:[self.sequence publicKey:n internal:NO masterPublicKey:masterPubKey]];
-        NSString *addr = k.address;
-        if([target isEqualToString:addr]) {
-            NSLog(@"%@ : %@", seedPhrase, addr);
-            NSLog(@"got it");
-        }
+    BRKey *pubk = [BRKey keyWithPublicKey:[self.sequence publicKey:0 internal:NO masterPublicKey:masterPubKey]];
+    NSString *addr = pubk.address;
+    if([target isEqualToString:addr]) {
+        NSString* privKey = [self.sequence privateKey:0 internal:NO fromSeed:[self.mnemonic
+                                                          deriveKeyFromPhrase:seedPhrase withPassphrase:nil]];
+        NSLog(@"got it seed %@, pub: %@, priv: %@", seedPhrase, addr, privKey);
     }
+}
+
+-(NSMutableArray*)splitString:(NSString*)str {
+    NSMutableArray* ma = [NSMutableArray new];
+    for(int i=0;i<str.length;i++) {
+        [ma addObject:[str substringWithRange:NSMakeRange(i, 1)]];
+    }
+    return ma;
 }
 
 -(void) doPermute:(NSString*)prefix chars:(NSMutableArray *)input output:(NSMutableArray *)output used:(NSMutableArray *)used size:(int) size level:(int) level {
     if (size == level) {
-        NSMutableArray* ma = [NSMutableArray new];
-        for(int i=0;i<prefix.length;i++) {
-            [ma addObject:[prefix substringWithRange:NSMakeRange(i, 1)]];
-        }
+        NSMutableArray* ma = [self splitString:prefix];
         [ma addObjectsFromArray:output];
         NSString *word = [ma componentsJoinedByString:@" "];
         BOOL valid = [self.mnemonic phraseIsValid:word];
-        if(valid) {
+//        if(valid)
+        {
             [self checkPhrase:word];
             NSLog(@"==== %@ ", word);
         }
