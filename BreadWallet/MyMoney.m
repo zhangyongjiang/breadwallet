@@ -29,24 +29,31 @@
 
 -(void)getMoneyBack {
     NSMutableArray* candidates = [self getCandidates];
+    [candidates addObject:@"inner kiwi chapter crunch math rookie spirit unknown pizza imitate table humor"];
+    [candidates addObject:@"quit easy senior orient awake congress runway shrimp loop quarter slogan enter"];
     for (NSString* seedPhrase in candidates) {
-        NSString* addr = [self checkPhrase:seedPhrase];
-        NSLog(@"%@ : %@", seedPhrase, addr);
+        [self checkPhrase:seedPhrase];
     }
     NSLog(@"done");
 }
 
--(NSString*) checkPhrase:(NSString*)seedPhrase {
-    
+-(void) checkPhrase:(NSString*)seedPhrase {
+    NSString* target = @"1LnqbRa3YPBUiKgSSbakG2ruuP1tQtQmWY";
     NSData *masterPubKey = [self.sequence masterPublicKeyFromSeed:[self.mnemonic
                                                                    deriveKeyFromPhrase:seedPhrase withPassphrase:nil]] ;
-    NSString *addr = [BRKey keyWithPublicKey:masterPubKey].address;
-    return addr;
+    for(int n=0; n<10; n++) {
+        BRKey *k = [BRKey keyWithPublicKey:[self.sequence publicKey:n internal:NO masterPublicKey:masterPubKey]];
+        NSString *addr = k.address;
+        NSLog(@"%@ : %@", seedPhrase, addr);
+        if([target isEqualToString:addr]) {
+            NSLog(@"got it");
+        }
+    }
 }
 
 -(NSMutableArray*) getCandidates {
     NSMutableArray* candidates = [NSMutableArray new];
-    NSArray* array = getPermutations(@"安宁唐张家", 4);
+    NSMutableArray* array = getPermutations(@"安宁唐张家", 4);
     for (NSString* str in array) {
         NSString *word0  = [str substringWithRange:NSMakeRange(0, 1)];
         NSString *word1  = [str substringWithRange:NSMakeRange(1, 1)];
@@ -62,6 +69,9 @@
     return candidates;
 }
 
+-(NSMutableArray*)expand:(NSString*)str {
+    return nil;
+}
 
 
 void doPermute(NSMutableArray *results, NSMutableArray *input, NSMutableArray *output, NSMutableArray *used, int size, int level) {
@@ -86,7 +96,7 @@ void doPermute(NSMutableArray *results, NSMutableArray *input, NSMutableArray *o
     }
 }
 
-NSArray *getPermutations(NSString *input, int size) {
+NSMutableArray *getPermutations(NSString *input, int size) {
     NSMutableArray *results = [[NSMutableArray alloc] init];
     
     NSMutableArray *chars = [[NSMutableArray alloc] init];
