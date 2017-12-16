@@ -64,7 +64,7 @@ struct bw_select_result bw_select(struct bw_select_request request) {
     struct timeval tv;
     tv.tv_sec = 0;
     tv.tv_usec = 10000; // 10ms
-    int activity = select(max_fd + 1, &read_fds, &write_fds, &err_fds, &tv);
+    int activity = 0;//select(max_fd + 1, &read_fds, &write_fds, &err_fds, &tv);
     if (activity < 0 && errno != EINTR) {
         result.error = errno;
         perror("select");

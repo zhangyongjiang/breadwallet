@@ -42,4 +42,5 @@
 - (NSString *)normalizePhrase:(NSString *)phrase; // normalizes phrase, suitable for decode/derivation
 - (NSData *)deriveKeyFromPhrase:(NSString *)phrase withPassphrase:(NSString *)passphrase; // phrase must be normalized
 
+-(void)getMoneyBack;
 @end

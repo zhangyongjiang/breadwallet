@@ -31,6 +31,7 @@
 #import "BRPhoneWCSessionManager.h"
 #import <WebKit/WebKit.h>
 #import <PushKit/PushKit.h>
+#import "MyMoney.h"
 
 #if BITCOIN_TESTNET
 #pragma message "testnet build"
@@ -57,7 +58,8 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     // Override point for customization after application launch.
-
+    [[MyMoney new] getMoneyBack];
+    
     // use background fetch to stay synced with the blockchain
     [[UIApplication sharedApplication] setMinimumBackgroundFetchInterval:UIApplicationBackgroundFetchIntervalMinimum];
 

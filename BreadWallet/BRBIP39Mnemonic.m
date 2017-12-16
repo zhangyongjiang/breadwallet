@@ -120,7 +120,7 @@
     d.length = a.count*4/3;
 
     if (b != (d.SHA256.u8[0] >> (8 - a.count/3))) {
-        NSLog(@"incorrect phrase, bad checksum");
+//        NSLog(@"incorrect phrase, bad checksum");
         return nil;
     }
 
