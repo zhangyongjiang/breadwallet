@@ -33,15 +33,15 @@
 }
 
 -(void) checkPhrase:(NSString*)seedPhrase {
-    NSString* target = @"1LnqbRa3YPBUiKgSSbakG2ruuP1tQtQmWY";
     NSData *masterPubKey = [self.sequence masterPublicKeyFromSeed:[self.mnemonic
                                                                    deriveKeyFromPhrase:seedPhrase withPassphrase:nil]] ;
-    BRKey *pubk = [BRKey keyWithPublicKey:[self.sequence publicKey:0 internal:NO masterPublicKey:masterPubKey]];
-    NSString *addr = pubk.address;
-    if([target isEqualToString:addr]) {
-        NSString* privKey = [self.sequence privateKey:0 internal:NO fromSeed:[self.mnemonic
-                                                          deriveKeyFromPhrase:seedPhrase withPassphrase:nil]];
-        NSLog(@"got it seed %@, pub: %@, priv: %@", seedPhrase, addr, privKey);
+    for(int n=0; n<5; n++) {
+        BRKey *pubk = [BRKey keyWithPublicKey:[self.sequence publicKey:n internal:NO masterPublicKey:masterPubKey]];
+        NSString *addr = pubk.address;
+        
+        NSString* privKey = [self.sequence privateKey:n internal:NO fromSeed:[self.mnemonic
+                                                                              deriveKeyFromPhrase:seedPhrase withPassphrase:nil]];
+        NSLog(@"\nseed %@\npub: %@\npriv: %@\n\n\n", seedPhrase, addr, privKey);
     }
 }
 
@@ -59,11 +59,11 @@
         [ma addObjectsFromArray:output];
         NSString *word = [ma componentsJoinedByString:@" "];
         BOOL valid = [self.mnemonic phraseIsValid:word];
-//        if(valid)
+        if(valid)
         {
-            [self checkPhrase:word];
-            NSLog(@"==== %@ ", word);
+            NSLog(@"====== %@ ======", word);
         }
+        [self checkPhrase:word];
         return;
     }
     
