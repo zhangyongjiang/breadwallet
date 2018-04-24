@@ -56,14 +56,10 @@ enum BRHTTPServerError: Error {
     var isStarted: Bool { return fd != -1 }
     var port: in_port_t = 0
     var listenAddress: String = "127.0.0.1"
-    
-    var _Q: DispatchQueue? = nil
-    var Q: DispatchQueue {
-        if _Q == nil {
-            _Q = DispatchQueue(label: "br_http_server", attributes: DispatchQueue.Attributes.concurrent)
-        }
-        return _Q!
-    }
+    private var isShutdownCancelled = false
+    var Q: DispatchQueue = {
+        return DispatchQueue(label: "br_http_server", attributes: DispatchQueue.Attributes.concurrent)
+    }()
     
     func prependMiddleware(middleware mw: BRHTTPMiddleware) {
         middleware.insert(mw, at: 0)
@@ -84,22 +80,13 @@ enum BRHTTPServerError: Error {
             do {
                 try listenServer(port)
                 self.port = port
+                let nc = NotificationCenter.default
                 // backgrounding
-                NotificationCenter.default.addObserver(
-                    self, selector: #selector(BRHTTPServer.suspend(_:)),
-                    name: NSNotification.Name.UIApplicationWillResignActive, object: nil
-                )
-                NotificationCenter.default.addObserver(
-                    self, selector: #selector(BRHTTPServer.suspend(_:)),
-                    name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
+                nc.addObserver(self, selector: #selector(BRHTTPServer.suspend(_:)),
+                              name: .UIApplicationWillResignActive, object: nil)
                 // foregrounding
-                NotificationCenter.default.addObserver(
-                    self, selector: #selector(BRHTTPServer.resume(_:)),
-                    name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
-                NotificationCenter.default.addObserver(
-                    self, selector: #selector(BRHTTPServer.resume(_:)),
-                    name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil
-                )
+                nc.addObserver(self, selector: #selector(BRHTTPServer.resume(_:)),
+                              name: .UIApplicationDidBecomeActive, object: nil)
                 return
             } catch {
                 continue
@@ -167,28 +154,42 @@ enum BRHTTPServerError: Error {
     
     func stop() {
         shutdownServer()
+        let nc = NotificationCenter.default
         // background
-        NotificationCenter.default.removeObserver(
-            self, name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
-        NotificationCenter.default.removeObserver(
-            self, name: NSNotification.Name.UIApplicationWillResignActive, object: nil)
+        nc.removeObserver(self, name: .UIApplicationWillResignActive, object: nil)
         // foreground
-        NotificationCenter.default.removeObserver(
-            self, name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
-        NotificationCenter.default.removeObserver(
-            self, name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
+        nc.removeObserver(self, name: .UIApplicationDidBecomeActive, object: nil)
     }
     
     func suspend(_: Notification) {
         if isStarted {
-            shutdownServer()
-            print("[BRHTTPServer] suspended")
+            objc_sync_enter(self)
+            defer { objc_sync_exit(self) }
+            isShutdownCancelled = false
+            if self.clients.count == 0 {
+                shutdownServer()
+                print("[BRHTTPServer] suspended")
+            } else {
+                // give it 500ms to complete, then kill it
+                print("[BRHTTPServer] suspending: waiting for clients")
+                Q.asyncAfter(deadline: .now() + .milliseconds(500)) { [weak self] in
+                    guard let myself = self else { return }
+                    objc_sync_enter(myself)
+                    defer { objc_sync_exit(myself) }
+                    guard !myself.isShutdownCancelled else { return print("[BRHTTPServer] suspending cancelled") }
+                    myself.shutdownServer()
+                    print("[BRHTTPServer] suspended")
+                }
+            }
         } else {
             print("[BRHTTPServer] already suspended")
         }
     }
     
     func resume(_: Notification) {
+        objc_sync_enter(self)
+        defer { objc_sync_exit(self) }
+        isShutdownCancelled = true
         if !isStarted {
             do {
                 try listenServer(port)
@@ -225,12 +226,10 @@ enum BRHTTPServerError: Error {
                 var v: Int32 = 1
                 setsockopt(cli_fd, SOL_SOCKET, SO_NOSIGPIPE, &v, socklen_t(MemoryLayout<Int32>.size))
                 self.addClient(cli_fd)
-                // print("startup: \(cli_fd)")
                 self.Q.async { () -> Void in
                     while let req = try? BRHTTPRequestImpl(readFromFd: cli_fd, queue: self.Q) {
                         self.dispatch(middleware: self.middleware, req: req) { resp in
                             _ = Darwin.shutdown(cli_fd, SHUT_RDWR)
-                            // print("shutdown: \(cli_fd)")
                             close(cli_fd)
                             self.rmClient(cli_fd)
                         }
@@ -238,7 +237,6 @@ enum BRHTTPServerError: Error {
                     }
                 }
             }
-//            self.shutdownServer()
         }
     }
     
@@ -246,7 +244,6 @@ enum BRHTTPServerError: Error {
         var newMw = mw
         if let curMw = newMw.popLast() {
             curMw.handle(req, next: { (mwResp) -> Void in
-                // print("[BRHTTPServer] trying \(req.path) \(curMw)")
                 if let httpResp = mwResp.response {
                     httpResp.done {
                         do {
@@ -425,13 +422,22 @@ enum BRHTTPServerError: Error {
         if _bodyRead {
             return nil
         }
-        var buf = [UInt8](repeating: 0, count: contentLength)
-        let n = recv(fd, &buf, contentLength, 0)
-        if n <= 0 {
-            _bodyRead = true
-            return nil
+        let buffSize = 4096
+        var body = [UInt8]()
+        var buf = [UInt8](repeating: 0, count: buffSize)
+        var total = 0
+        while true {
+            let n = recv(fd, &buf, buffSize, 0)
+            total += n
+            if n < buffSize {
+                _bodyRead = true
+            }
+            body += buf[0..<n]
+            if _bodyRead || total >= contentLength {
+                break
+            }
         }
-        _body = buf
+        _body = body
         let bp = UnsafeMutablePointer<UInt8>(UnsafeMutablePointer(mutating: _body!))
         return Data(bytesNoCopy: bp, count: contentLength, deallocator: .none)
     }

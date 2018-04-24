@@ -211,7 +211,7 @@ static NSString *dateFormat(NSString *template)
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
-    [self.buyController preload];
+    [self.buyController preload];    
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -262,7 +262,7 @@ static NSString *dateFormat(NSString *template)
         return _buyController;
     }
     if ([WKWebView class] && [[BRAPIClient sharedClient] featureEnabled:BRFeatureFlagsBuyBitcoin]) { // only available on iOS 8 and above
-#if DEBUG
+#if DEBUG || TESTFLIGHT
         _buyController = [[BRWebViewController alloc] initWithBundleName:@"bread-buy-staging" mountPoint:@"/buy"];
         //        self.buyController.debugEndpoint = @"http://localhost:8080";
 #else
@@ -436,7 +436,6 @@ static NSString *dateFormat(NSString *template)
 {
     [self presentViewController:self.buyController animated:YES completion:nil];
 }
-
 // MARK: - UITableViewDataSource
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
@@ -582,7 +581,7 @@ static NSString *dateFormat(NSString *template)
             long adjustedRow = !buyEnabled ? indexPath.row + 1 : indexPath.row;
             switch (adjustedRow) {
                 case 0:
-                    cell.textLabel.text = NSLocalizedString(@"Buy Bitcoin", nil);
+                    cell.textLabel.text = NSLocalizedString(@"buy bitcoin", nil);
                     cell.imageView.image = [UIImage imageNamed:@"bitcoin-buy-blue-small"];
                     break;
                     

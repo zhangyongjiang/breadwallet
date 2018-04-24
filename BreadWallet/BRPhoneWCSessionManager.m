@@ -30,6 +30,7 @@
 #import "BRPeerManager.h"
 #import "BRTransaction+Utils.h"
 #import "BRWalletManager.h"
+#import "BRAppGroupConstants.h"
 #import "UIImage+Utils.h"
 #import <WatchConnectivity/WatchConnectivity.h>
 
@@ -142,11 +143,19 @@
             req.amount = [message[AW_SESSION_QR_CODE_BITS_KEY] integerValue];
             NSLog(@"watch requested a qr code amount %lld", req.amount);
 
-            UIImage *img = [[UIImage imageWithQRCodeData:req.data color:[CIColor colorWithRed:0.0 green:0.0 blue:0.0]]
-                            resize:CGSizeMake(150, 150) withInterpolationQuality:kCGInterpolationNone];
-            NSData *dat = UIImagePNGRepresentation(img);
+            NSUserDefaults *defs = [[NSUserDefaults alloc] initWithSuiteName:APP_GROUP_ID];
+            UIImage *image = nil;
+            
+            if ([req.data isEqual:[defs objectForKey:APP_GROUP_REQUEST_DATA_KEY]]) {
+                image = [UIImage imageWithData:[defs objectForKey:APP_GROUP_QR_IMAGE_KEY]];
+            }
+            
+            if (! image && req.data) {
+                image = [UIImage imageWithQRCodeData:req.data color:[CIColor colorWithRed:0.0 green:0.0 blue:0.0]];
+            }
 
-            replyHandler(@{AW_QR_CODE_BITS_KEY: dat});
+            image = [image resize:CGSizeMake(150, 150) withInterpolationQuality:kCGInterpolationNone];
+            replyHandler(image ? @{AW_QR_CODE_BITS_KEY: UIImagePNGRepresentation(image)} : @{});
             break;
         }
         
@@ -259,9 +268,18 @@
 {
     BRWalletManager *manager = [BRWalletManager sharedInstance];
     NSData *req = [BRPaymentRequest requestWithString:manager.wallet.receiveAddress].data;
+    NSUserDefaults *defs = [[NSUserDefaults alloc] initWithSuiteName:APP_GROUP_ID];
+    UIImage *image = nil;
     
-    return [[UIImage imageWithQRCodeData:req color:[CIColor colorWithRed:0.0 green:0.0 blue:0.0]]
-            resize:CGSizeMake(150, 150) withInterpolationQuality:kCGInterpolationNone];
+    if ([req isEqual:[defs objectForKey:APP_GROUP_REQUEST_DATA_KEY]]) {
+        image = [UIImage imageWithData:[defs objectForKey:APP_GROUP_QR_IMAGE_KEY]];
+    }
+
+    if (! image && req) {
+        image = [UIImage imageWithQRCodeData:req color:[CIColor colorWithRed:0.0 green:0.0 blue:0.0]];
+    }
+    
+    return [image resize:CGSizeMake(150, 150) withInterpolationQuality:kCGInterpolationNone];
 }
 
 // MARK: - data helper methods

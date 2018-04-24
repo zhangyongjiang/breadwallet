@@ -36,6 +36,12 @@
 #import "NSMutableData+Bitcoin.h"
 #import "NSManagedObject+Sugar.h"
 
+#if BITCOIN_TESTNET
+#define BCASH_FORKHEIGHT 1155744
+#else // mainnet
+#define BCASH_FORKHEIGHT 478559
+#endif
+
 // chain position of first tx output address that appears in chain
 static NSUInteger txAddressIndex(BRTransaction *tx, NSArray *chain) {
     for (NSString *addr in tx.outputAddresses) {
@@ -146,6 +152,8 @@ masterPublicKey:(NSData *)masterPublicKey seed:(NSData *(^)(NSString *authprompt
         }];
     }
     
+    [self addressesWithGapLimit:SEQUENCE_GAP_LIMIT_EXTERNAL internal:NO];
+    [self addressesWithGapLimit:SEQUENCE_GAP_LIMIT_INTERNAL internal:YES];
     [self sortTransactions];
     _balance = UINT64_MAX; // trigger balance changed notification even if balance is zero
     [self updateBalance];
@@ -481,7 +489,8 @@ masterPublicKey:(NSData *)masterPublicKey seed:(NSData *(^)(NSString *authprompt
         [output getValue:&o];
         tx = self.allTx[uint256_obj(o.hash)];
         if (! tx) continue;
-        [transaction addInputHash:tx.txHash index:o.n script:tx.outputScripts[o.n]];
+        [transaction addInputHash:tx.txHash index:o.n amount:[tx.outputAmounts[o.n] unsignedLongLongValue]
+         script:tx.outputScripts[o.n]];
         
         if (transaction.size + 34 > TX_MAX_SIZE) { // transaction size-in-bytes too large
             NSUInteger txSize = 10 + self.utxos.count*148 + (scripts.count + 1)*34;
@@ -507,8 +516,10 @@ masterPublicKey:(NSData *)masterPublicKey seed:(NSData *(^)(NSString *authprompt
         
         balance += [tx.outputAmounts[o.n] unsignedLongLongValue];
         
-        // add up size of unconfirmed, non-change inputs for child-pays-for-parent fee calculation
-        if (tx.blockHeight == TX_UNCONFIRMED && [self amountSentByTransaction:tx] == 0) cpfpSize += tx.size;
+//        // add up size of unconfirmed, non-change inputs for child-pays-for-parent fee calculation
+//        // don't include parent tx with more than 10 inputs or 10 outputs
+//        if (tx.blockHeight == TX_UNCONFIRMED && tx.inputHashes.count <= 10 && tx.outputAmounts.count <= 10 &&
+//            [self amountSentByTransaction:tx] == 0) cpfpSize += tx.size;
         
         if (fee) {
             feeAmount = [self feeForTxSize:transaction.size + 34 + cpfpSize]; // assume we will add a change output
@@ -910,8 +921,10 @@ masterPublicKey:(NSData *)masterPublicKey seed:(NSData *(^)(NSString *authprompt
         inputCount++;
         amount += [tx.outputAmounts[o.n] unsignedLongLongValue];
         
-        // size of unconfirmed, non-change inputs for child-pays-for-parent fee
-        if (tx.blockHeight == TX_UNCONFIRMED && [self amountSentByTransaction:tx] == 0) cpfpSize += tx.size;
+//        // size of unconfirmed, non-change inputs for child-pays-for-parent fee
+//        // don't include parent tx with more than 10 inputs or 10 outputs
+//        if (tx.blockHeight == TX_UNCONFIRMED && tx.inputHashes.count <= 10 && tx.outputAmounts.count <= 10 &&
+//            [self amountSentByTransaction:tx] == 0) cpfpSize += tx.size;
     }
     
     
@@ -919,6 +932,21 @@ masterPublicKey:(NSData *)masterPublicKey seed:(NSData *(^)(NSString *authprompt
              [NSMutableData sizeOfVarInt:2] + TX_OUTPUT_SIZE*2;
     fee = [self feeForTxSize:txSize + cpfpSize];
     return (amount > fee) ? amount - fee : 0;
+}
+
+// returns an unsigned transaction that sweeps all wallet UTXOs as of block height 478559 to addr
+// transaction must be signed using a forkId of 0x40
+- (BRTransaction * _Nullable)bCashSweepTxTo:(NSString * _Nonnull)address feePerKb:(uint64_t)feePerKb
+{
+    BRWallet *w = [[BRWallet alloc] initWithContext:nil sequence:self.sequence masterPublicKey:self.masterPublicKey
+                   seed:^NSData *(NSString *authprompt, uint64_t amount) { return nil; }];
+    
+    for (BRTransaction *tx in self.transactions.reversedOrderedSet) {
+        if (tx.blockHeight < BCASH_FORKHEIGHT) [w registerTransaction:tx];
+    }
+    
+    w.feePerKb = feePerKb;
+    return [w transactionFor:w.maxOutputAmount to:address withFee:YES];
 }
 
 @end

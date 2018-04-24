@@ -153,29 +153,38 @@ class BRWebSocketServer {
                 write_fd_len: Int32(writeFds.count),
                 read_fd_len: Int32(readFds.count),
                 write_fds: UnsafeMutablePointer(mutating: writeFds),
-                read_fds: UnsafeMutablePointer(mutating: readFds));
+                read_fds: UnsafeMutablePointer(mutating: readFds)
+            );
             
             let resp = bw_select(req)
             
             if resp.error > 0 {
                 let errstr = strerror(resp.error)
-                log("error doing a select \(errstr) - removing all clients")
+                log("error doing a select \(String(describing: errstr)) - removing all clients")
                 sockets.removeAll()
                 continue
             }
             
             // read for all readers that have data waiting
             for i in 0..<resp.read_fd_len {
-                log("handle read fd \(sockets[resp.read_fds[Int(i)]]!.fd)")
                 if let readSock = sockets[resp.read_fds[Int(i)]] {
-                    readSock.handleRead()
+                    log("handle read fd \(readSock.fd)")
+                    do {
+                        try readSock.handleRead()
+                    } catch {
+                        readSock.response.kill()
+                        readSock.client.socketDidDisconnect?(readSock)
+                        sockets.removeValue(forKey: readSock.fd)
+                    }
+                } else {
+                    log("nil read socket")
                 }
             }
             
             // write for all writers
             for i in 0..<resp.write_fd_len {
-                log("handle write fd=\(sockets[resp.write_fds[Int(i)]]!.fd)")
                 if let writeSock = sockets[resp.write_fds[Int(i)]] {
+                    log("handle write fd=\(writeSock.fd)")
                     let (opcode, payload) = writeSock.sendq.removeFirst()
                     do {
                         let sentBytes = try sendBuffer(writeSock.fd, buffer: payload)
@@ -198,6 +207,8 @@ class BRWebSocketServer {
                         writeSock.client.socketDidDisconnect?(writeSock)
                         sockets.removeValue(forKey: writeSock.fd)
                     }
+                } else {
+                    log("nil write socket")
                 }
             }
             
@@ -333,11 +344,12 @@ class BRWebSocketImpl: BRWebSocket {
         return true
     }
     
-    func handleRead() {
+    func handleRead() throws {
         var buf = [UInt8](repeating: 0, count: 1)
         let n = recv(fd, &buf, 1, 0)
         if n <= 0 {
-            return // failed read - figure out what to do here i guess
+            log("nothign to read... killing socket")
+            throw BRHTTPServerError.socketRecvFailed
         }
         parseMessage(buf[0])
     }

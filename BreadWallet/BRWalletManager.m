@@ -365,7 +365,7 @@ static NSDictionary *getKeychainDict(NSString *key, NSError **error)
 // master public key used to generate wallet addresses
 - (NSData *)masterPublicKey
 {
-    return getKeychainData(MASTER_PUBKEY_KEY, nil);
+    return [getKeychainData(MASTER_PUBKEY_KEY, nil) subdataWithRange:NSMakeRange(0, 69)];
 }
 
 // requesting seedPhrase will trigger authentication
@@ -565,6 +565,14 @@ static NSDictionary *getKeychainDict(NSString *key, NSError **error)
         return YES;
     }
     else return NO;
+}
+
+- (BOOL)isTestnet {
+#if BITCOIN_TESTNET
+    return true;
+#else 
+    return false;
+#endif
 }
 
 - (UITextField *)pinField
@@ -1029,7 +1037,7 @@ completion:(void (^)(NSArray *utxos, NSArray *amounts, NSArray *scripts, NSError
 - (void)utxos:(NSString *)unspentURL forAddresses:(NSArray *)addresses
 completion:(void (^)(NSArray *utxos, NSArray *amounts, NSArray *scripts, NSError *error))completion
 {
-    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:UNSPENT_URL]
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:unspentURL]
                                 cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:20.0];
     NSMutableArray *args = [NSMutableArray array];
     NSMutableCharacterSet *charset = [[NSCharacterSet URLQueryAllowedCharacterSet] mutableCopy];
@@ -1140,7 +1148,7 @@ completion:(void (^)(BRTransaction *tx, uint64_t fee, NSError *error))completion
             BRUTXO o;
 
             [output getValue:&o];
-            [tx addInputHash:o.hash index:o.n script:scripts[i]];
+            [tx addInputHash:o.hash index:o.n amount:[amounts[i] unsignedLongLongValue] script:scripts[i]];
             balance += [amounts[i++] unsignedLongLongValue];
         }
 
